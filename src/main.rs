@@ -40,10 +40,16 @@ struct App {
 impl App {
     fn new(_cc: &eframe::CreationContext<'_>, num_matches: usize) -> Self {
         let mut init_cards = Vec::new();
+        let face_values = vec!["😍", "🌳", "🐼", "🌹", "🔥", "🍰", "🍑", "🎨", "💩", "💎"];
 
-        for _ in 0..num_matches * 2 {
+        for i in 0..num_matches * 2 {
             let mut card: Card = Card::new();
-            card.face_value = "Test".to_string();
+            if i < 10 {
+                card.face_value = face_values[i].to_string();
+            } else {
+                card.face_value = face_values[i - 10].to_string();
+            }
+
             card.flipped = CardState::NotFlipped(Color32::TRANSPARENT);
             init_cards.push(card);
         }
@@ -98,13 +104,15 @@ impl eframe::App for App {
                         point_in_screen,
                         egui::Align2::CENTER_CENTER,
                         &self.game_state[i].face_value,
-                        FontId::monospace(10.0),
+                        FontId::monospace(75.0),
                         Color32::WHITE,
                     );
                 }
 
                 if self.cards_flipped == 2 {
                     // TODO Check if match if so continue and set cards flipped to 0
+                    // TODO find the cards that are flipped
+                    // TODO Check if face values are the same
 
                     // TODO else
                     for i in 0..self.num_matches * 2 {
