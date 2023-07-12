@@ -1,3 +1,5 @@
+use std::{thread, time};
+
 use egui::{emath::RectTransform, Color32, FontId, Pos2, Rect, Rounding, Stroke, Vec2};
 
 fn main() -> eframe::Result<()> {
@@ -105,15 +107,18 @@ impl eframe::App for App {
                     let point = Pos2 { x: 75.0, y: 125.0 };
                     // Make the absolute point relative to the "canvas" container
                     let point_in_screen = to_screen.transform_pos(point);
-                    // e.g. x: 338.0, y: 245.0
 
-                    ui.painter_at(rect).text(
-                        point_in_screen,
-                        egui::Align2::CENTER_CENTER,
-                        &self.game_state[i].face_value,
-                        FontId::monospace(75.0),
-                        Color32::WHITE,
-                    );
+                    if self.game_state[i].flipped == CardState::Flipped(Color32::BLUE)
+                        || self.game_state[i].flipped == CardState::Matched(Color32::GREEN)
+                    {
+                        ui.painter_at(rect).text(
+                            point_in_screen,
+                            egui::Align2::CENTER_CENTER,
+                            &self.game_state[i].face_value,
+                            FontId::monospace(75.0),
+                            Color32::WHITE,
+                        );
+                    }
                 }
 
                 if self.cards_flipped == 2 {
@@ -129,7 +134,6 @@ impl eframe::App for App {
 
                         self.matched += 1;
                     } else {
-                        // TODO else
                         for i in 0..self.num_matches * 2 {
                             let card = &mut self.game_state[i];
                             if card.flipped != CardState::Matched(Color32::GREEN) {
