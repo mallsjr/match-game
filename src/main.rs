@@ -26,9 +26,11 @@ impl Card {
     }
 }
 
+#[derive(Debug, PartialEq)]
 enum CardState {
     Flipped(Color32),
     NotFlipped(Color32),
+    Matched(Color32),
 }
 
 struct App {
@@ -81,6 +83,7 @@ impl eframe::App for App {
                     let color = match self.game_state[i].flipped {
                         CardState::Flipped(color) => color,
                         CardState::NotFlipped(color) => color,
+                        CardState::Matched(color) => color,
                     };
 
                     ui.painter().rect(
@@ -113,11 +116,23 @@ impl eframe::App for App {
                     // TODO Check if match if so continue and set cards flipped to 0
                     // TODO find the cards that are flipped
                     // TODO Check if face values are the same
+                    // TODO set the color to be card state matched and color Green
 
-                    // TODO else
-                    for i in 0..self.num_matches * 2 {
-                        let card = &mut self.game_state[i];
-                        card.flipped = CardState::NotFlipped(Color32::TRANSPARENT);
+                    let mut flipped: Vec<&mut Card> = self
+                        .game_state
+                        .iter_mut()
+                        .filter(|card| card.flipped == CardState::Flipped(Color32::BLUE))
+                        .collect();
+
+                    if flipped[0].face_value == flipped[1].face_value {
+                        flipped[0].flipped = CardState::Matched(Color32::GREEN);
+                        flipped[1].flipped = CardState::Matched(Color32::GREEN);
+                    } else {
+                        // TODO else
+                        for i in 0..self.num_matches * 2 {
+                            let card = &mut self.game_state[i];
+                            card.flipped = CardState::NotFlipped(Color32::TRANSPARENT);
+                        }
                     }
                     self.cards_flipped = 0;
                 }
