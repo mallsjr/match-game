@@ -36,13 +36,16 @@ enum CardState {
 struct App {
     game_state: Vec<Card>,
     num_matches: usize,
+    matched: usize,
     cards_flipped: usize,
 }
 
 impl App {
     fn new(_cc: &eframe::CreationContext<'_>, num_matches: usize) -> Self {
         let mut init_cards = Vec::new();
-        let face_values = vec!["😍", "🌳", "🐼", "🌹", "🔥", "🍰", "🍑", "🎨", "💩", "💎"];
+        let mut face_values = vec!["😍", "🌳", "🐼", "🌹", "🔥", "🍰", "🍑", "🎨", "💩", "💎"];
+
+        fastrand::shuffle(&mut face_values);
 
         for i in 0..num_matches * 2 {
             let mut card: Card = Card::new();
@@ -59,6 +62,7 @@ impl App {
         Self {
             game_state: init_cards,
             num_matches,
+            matched: 0,
             cards_flipped: 0,
         }
     }
@@ -113,11 +117,6 @@ impl eframe::App for App {
                 }
 
                 if self.cards_flipped == 2 {
-                    // TODO Check if match if so continue and set cards flipped to 0
-                    // TODO find the cards that are flipped
-                    // TODO Check if face values are the same
-                    // TODO set the color to be card state matched and color Green
-
                     let mut flipped: Vec<&mut Card> = self
                         .game_state
                         .iter_mut()
@@ -127,14 +126,22 @@ impl eframe::App for App {
                     if flipped[0].face_value == flipped[1].face_value {
                         flipped[0].flipped = CardState::Matched(Color32::GREEN);
                         flipped[1].flipped = CardState::Matched(Color32::GREEN);
+
+                        self.matched += 1;
                     } else {
                         // TODO else
                         for i in 0..self.num_matches * 2 {
                             let card = &mut self.game_state[i];
-                            card.flipped = CardState::NotFlipped(Color32::TRANSPARENT);
+                            if card.flipped != CardState::Matched(Color32::GREEN) {
+                                card.flipped = CardState::NotFlipped(Color32::TRANSPARENT);
+                            }
                         }
                     }
                     self.cards_flipped = 0;
+                }
+
+                if self.matched == self.num_matches {
+                    ui.heading("You Win!!!");
                 }
             });
         });
