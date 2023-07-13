@@ -1,5 +1,3 @@
-use std::{thread, time};
-
 use egui::{emath::RectTransform, Color32, FontId, Pos2, Rect, Rounding, Stroke, Vec2};
 
 fn main() -> eframe::Result<()> {
@@ -14,6 +12,7 @@ fn main() -> eframe::Result<()> {
     )
 }
 
+#[derive(Debug)]
 struct Card {
     face_value: String,
     flipped: CardState,
@@ -33,6 +32,7 @@ enum CardState {
     Flipped(Color32),
     NotFlipped(Color32),
     Matched(Color32),
+    Incorrect(Color32),
 }
 
 struct App {
@@ -82,14 +82,17 @@ impl eframe::App for App {
 
                     if response.clicked() {
                         let card = &mut self.game_state[i];
-                        card.flipped = CardState::Flipped(Color32::BLUE);
-                        self.cards_flipped += 1;
+                        if card.flipped != CardState::Flipped(Color32::BLUE) {
+                            card.flipped = CardState::Flipped(Color32::BLUE);
+                            self.cards_flipped += 1;
+                        }
                     }
 
                     let color = match self.game_state[i].flipped {
                         CardState::Flipped(color) => color,
                         CardState::NotFlipped(color) => color,
                         CardState::Matched(color) => color,
+                        CardState::Incorrect(color) => color,
                     };
 
                     ui.painter().rect(
@@ -122,6 +125,26 @@ impl eframe::App for App {
                 }
 
                 if self.cards_flipped == 2 {
+                    let mut incorrect: Vec<&mut Card> = self
+                        .game_state
+                        .iter_mut()
+                        .filter(|card| card.flipped == CardState::Incorrect(Color32::RED))
+                        .collect();
+
+                    // println!("{:?}", incorrect);
+
+                    if incorrect.len() == 1 {
+                        incorrect.iter_mut().for_each(|item| {
+                            item.flipped = CardState::NotFlipped(Color32::TRANSPARENT)
+                        });
+                        incorrect.pop();
+                    }
+
+                    if !incorrect.is_empty() {
+                        incorrect[0].flipped = CardState::NotFlipped(Color32::TRANSPARENT);
+                        incorrect[1].flipped = CardState::NotFlipped(Color32::TRANSPARENT);
+                    }
+
                     let mut flipped: Vec<&mut Card> = self
                         .game_state
                         .iter_mut()
@@ -134,12 +157,8 @@ impl eframe::App for App {
 
                         self.matched += 1;
                     } else {
-                        for i in 0..self.num_matches * 2 {
-                            let card = &mut self.game_state[i];
-                            if card.flipped != CardState::Matched(Color32::GREEN) {
-                                card.flipped = CardState::NotFlipped(Color32::TRANSPARENT);
-                            }
-                        }
+                        flipped[0].flipped = CardState::Incorrect(Color32::RED);
+                        flipped[1].flipped = CardState::Incorrect(Color32::RED);
                     }
                     self.cards_flipped = 0;
                 }
