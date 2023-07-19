@@ -40,6 +40,7 @@ struct App {
     num_matches: usize,
     matched: usize,
     cards_flipped: usize,
+    frame: usize,
 }
 
 impl App {
@@ -66,6 +67,7 @@ impl App {
             num_matches,
             matched: 0,
             cards_flipped: 0,
+            frame: 0,
         }
     }
 }
@@ -113,6 +115,8 @@ impl eframe::App for App {
 
                     if self.game_state[i].flipped == CardState::Flipped(Color32::BLUE)
                         || self.game_state[i].flipped == CardState::Matched(Color32::GREEN)
+                        || (self.game_state[i].flipped == CardState::Incorrect(Color32::RED)
+                            && self.frame < 3)
                     {
                         ui.painter_at(rect).text(
                             point_in_screen,
@@ -125,13 +129,12 @@ impl eframe::App for App {
                 }
 
                 if self.cards_flipped == 2 {
+                    self.frame = 0;
                     let mut incorrect: Vec<&mut Card> = self
                         .game_state
                         .iter_mut()
                         .filter(|card| card.flipped == CardState::Incorrect(Color32::RED))
                         .collect();
-
-                    // println!("{:?}", incorrect);
 
                     if incorrect.len() == 1 {
                         incorrect.iter_mut().for_each(|item| {
@@ -166,6 +169,8 @@ impl eframe::App for App {
                 if self.matched == self.num_matches {
                     ui.heading("You Win!!!");
                 }
+
+                self.frame += 1;
             });
         });
     }
